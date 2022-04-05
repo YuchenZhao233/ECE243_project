@@ -91,10 +91,11 @@ int check_move_legality(int x, int y){
     return VALID;
 }
 
-// Initialize the board to empty, 0 means empty
+// Initialize the board to empty, 0 means empty; also reset the current position of chess to (0, 0)
 void init_board(){
+    x_position = 0;
+    y_position = 0;
     int i = 0;
-
     for (; i < ROW; i++){
         int j = 0;
         for (; j < COL; j++){
@@ -130,9 +131,45 @@ void draw_cmd_board(){
 // Calculate the number of pieces in the given direction
 int calculate_pieces(int direction){
     int new_x = x_position, new_y = y_position, count = 0;
-    
+    while(TRUE){
+        if (direction == UP)
+            new_x--;
+        else if (direction == DOWN)
+            new_x++;
+        else if (direction == LEFT)
+            new_y--;
+        else if (direction == RIGHT)
+            new_y++;
+        else if (direction == LEFT_UP){
+            new_x--;
+            new_y--;
+        }
+        else if (direction == LEFT_DOWN){
+            new_x++;
+            new_y--;
+        }
+        else if (direction == RIGHT_UP){
+            new_x--;
+            new_y++;
+        }
+        else if (direction == RIGHT_DOWN){
+            new_x++;
+            new_y--;
+        }
 
-    return 0;
+        if (new_x < 0 || new_x > ROW - 1 || new_y < 0 || new_y > COL - 1){
+            break;
+        }
+        else {
+            if (chess_board[x_position][y_position] == chess_board[new_x][new_y])
+                count++;
+            else
+                break;
+        }
+    
+    }
+
+    return count;
 }
 
 
