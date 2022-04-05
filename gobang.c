@@ -1,4 +1,7 @@
 #include "address_map_arm.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 /* VGA colors */
 #define WHITE 0xFFFF
@@ -23,12 +26,32 @@
 #define FALSE 0
 #define TRUE 1
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
+// Define board size
+#define ROW 10
+#define COL 10
 
+// Define eight directional macros
+#define UP  20
+#define DOWN 21
+#define RIGHT 22
+#define LEFT 23
+#define RIGHT_UP 24
+#define RIGHT_DOWN 25
+#define LEFT_UP 26
+#define LEFT_DOWN 27
 
-volatile int pixel_buffer_start; // global variable
+// Define game state macros
+#define DRAW 3
+#define CONTINUE 4
+#define END 5
+#define ERROR 6
+#define VALID 7
+
+// Global Variable
+volatile int pixel_buffer_start; 
+volatile int chess_board[ROW][COL];  // 0 for empty, 1 for blue piece, 2 for white piece
+volatile int x_position;
+volatile int y_position;
 
 // Functions for drawing on the VGA Display
 void plot_pixel(int, int, short int);
@@ -37,6 +60,18 @@ void clear_screen();
 void swap(int*, int*);
 void wait_for_vsync();
 
+// Game logic functions
+int check_move_legality(int x, int y);
+void init_board();
+void draw_cmd_board();
+int game_state();
+int calculate_pieces(int direction);
+
+
+
+
+// Some AI function possibly
+
 int main(void){
     
 
@@ -44,6 +79,62 @@ int main(void){
 
     return 0;
 }
+
+// Check the validity of player's move. Return ERROR for not legal move; return valid for legal move
+int check_move_legality(int x, int y){
+    if (x < 0 || x > ROW - 1 || y < 0 || y > COL - 1)
+        return ERROR;
+    
+    if (chess_board[x][y] != 0)
+        return ERROR;
+
+    return VALID;
+}
+
+// Initialize the board to empty, 0 means empty
+void init_board(){
+    int i = 0;
+
+    for (; i < ROW; i++){
+        int j = 0;
+        for (; j < COL; j++){
+            chess_board[i][j] = 0;
+        }
+    }
+}
+
+// Draw command line board, just for testing game logic purpose, do not use it for actual the actual game
+void draw_cmd_board(){
+    printf(" ");
+    int i = 0;
+    for (; i < ROW; i++){
+        printf(" %d ", i);
+    }
+    printf("\n");
+    i = 0;
+    for (; i < ROW; i++){
+        printf("%d", i);
+        int j = 0;
+        for (; j < COL; j++){
+            if (chess_board[i][j] == 0){
+                printf(" . ");
+            }
+            else{
+                printf(" %d ", chess_board[i][j]);
+            }
+        }
+        printf("\n");
+    }   
+}
+
+// Calculate the number of pieces in the given direction
+int calculate_pieces(int direction){
+    int new_x = x_position, new_y = y_position, count = 0;
+    
+
+    return 0;
+}
+
 
 void wait_for_vsync(){
     volatile int * pixel_ctrl_ptr = (int *) 0xFF203020;
