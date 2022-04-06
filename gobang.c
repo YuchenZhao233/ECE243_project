@@ -41,11 +41,14 @@
 #define LEFT_DOWN 27
 
 // Define game state macros
-#define DRAW 3
+#define TIE 3
 #define CONTINUE 4
 #define END 5
 #define ERROR 6
 #define VALID 7
+
+#define PLAYER1 1
+#define PLAYER2 2
 
 // Global Variable
 volatile int pixel_buffer_start; 
@@ -66,6 +69,7 @@ void init_board();
 void draw_cmd_board();
 int game_state();
 int calculate_pieces(int direction);
+void play_game();
 
 
 
@@ -73,11 +77,53 @@ int calculate_pieces(int direction);
 // Some AI function possibly
 
 int main(void){
-    
+    int play;
+    while (true){
+        printf("Do you want to play this gobang game? 1 for yes, 2 for no. \n");
+        scanf("%d", &play);
+        if (play == 1){
+            play_game();
+        } 
+        else if (play == 2){
+            printf("Ok\n");
+            break;
+        }
+    }
 
-
-
+    printf("That's it.\n");
     return 0;
+}
+
+void play_game(){
+    init_board();
+    int turn = PLAYER1;
+    int result = 0;
+    while (true){
+        draw_cmd_board();
+        while (true){
+            printf("%d, Please enter the position:\n", turn);
+            scanf("%d%d", &x_position, &y_position);
+            if (check_move_legality(x_position, y_position) == VALID){
+                chess_board[x_position][y_position] = turn;
+                break;
+            } else{
+                printf("Not valid.\n");
+                continue;
+            }
+        }
+        result = game_state();
+        if (result != CONTINUE)
+            break;
+        
+        if (turn == PLAYER1) turn = PLAYER2;
+        else turn = PLAYER1;
+    }
+
+    draw_cmd_board();
+    if (result == PLAYER1) printf("1 wins\n");
+    else if (result == PLAYER2) printf("2 wins\n");
+    else if (result == TIE) printf("A draw.\n");
+
 }
 
 // Check the validity of player's move. Return ERROR for not legal move; return valid for legal move
@@ -126,6 +172,27 @@ void draw_cmd_board(){
         }
         printf("\n");
     }   
+}
+
+// Check the status of the game, decide the winner, or continue the game
+int game_state(){
+    // See whether 5 pieces is connected, return the winner
+    if (calculate_pieces(UP) + calculate_pieces(DOWN) >= 4 || calculate_pieces(LEFT) + calculate_pieces(RIGHT) >= 4 ||
+        calculate_pieces(LEFT_DOWN) + calculate_pieces(RIGHT_UP) >= 4 || calculate_pieces(LEFT_UP) + calculate_pieces(RIGHT_DOWN) >= 4)
+        return chess_board[x_position][y_position];
+
+    // If there are still empty place on the board, the game should continue
+    int i = 0;
+    for (; i < ROW; i++){
+        int j = 0;
+        for (; j < COL; j++){
+            if (chess_board[i][j] == 0)
+                return CONTINUE;
+        }
+    }
+
+    return TIE;
+
 }
 
 // Calculate the number of pieces in the given direction
