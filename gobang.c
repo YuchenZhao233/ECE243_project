@@ -221,7 +221,7 @@ int calculate_pieces(int direction){
         }
         else if (direction == RIGHT_DOWN){
             new_x++;
-            new_y--;
+            new_y++;
         }
 
         if (new_x < 0 || new_x > ROW - 1 || new_y < 0 || new_y > COL - 1){
