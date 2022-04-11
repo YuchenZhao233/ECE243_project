@@ -1,4 +1,4 @@
-#include "address_map_arm.h"
+//#include "address_map_arm.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -55,8 +55,23 @@ volatile int pixel_buffer_start;
 volatile int chess_board[ROW][COL];  // 0 for empty, 1 for blue piece, 2 for white piece
 volatile int x_position;
 volatile int y_position;
+bool draw = false;
+
+// Interupt set up
+void set_A9_IRQ_stack (void);
+void config_GIC (void);
+void config_KEYs (void);
+void config_PS2 (void);
+void config_interrupt (int, int);
+void enable_A9_interrupts (void);
+void disable_A9_interrupts (void);
+void pushbutton_ISR(void);
+void keyboard_ISR(void);
 
 // Functions for drawing on the VGA Display
+void draw_board();
+void draw_chess();
+void draw_chess_on_board();
 void plot_pixel(int, int, short int);
 void draw_line(int, int, int, int, int);
 void clear_screen();
@@ -70,14 +85,68 @@ void draw_cmd_board();
 int game_state();
 int calculate_pieces(int direction);
 void play_game();
+void draw_layout();
 
+// Initialize arrays of images 
+
+
+// Define the IRQ exception handler
+void __attribute__ ((interrupt)) __cs3_isr_irq (void){
+    // Read the ICCIAR from the CPU Interface in the GIC
+    int interrupt_ID = *((int *) 0xFFFEC10C);
+    if (interrupt_ID == 73) // check if interrupt is from the KEYs
+        pushbutton_ISR ();
+    else if (interrupt_ID == 79) // check if interrupt is from the keyboard
+	    keyboard_ISR();
+    else
+        while (1); // if unexpected, then stay here
+    // Write to the End of Interrupt Register (ICCEOIR)
+    *((int *) 0xFFFEC110) = interrupt_ID;
+}
+
+// Define the remaining exception handlers
+void __attribute__ ((interrupt)) __cs3_reset (void){
+    while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_undef (void){
+    while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_swi (void){
+    while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_pabort (void){
+    while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_dabort (void){
+    while(1);
+}
+
+void __attribute__ ((interrupt)) __cs3_isr_fiq (void){
+    while(1);
+}
+
+void draw_layout(){
+    if (draw == true){
+        int x = 0;
+        int y = 0;
+        for (x = 0; x < RESOLUTION_X; x++) {
+            for (y = 0; y < RESOLUTION_Y; y++) {
+                plot_pixel(x, y, ORANGE);
+            }
+        }
+    }
+}
 
 
 
 // Some AI function possibly
 
 int main(void){
-    int play;
+    /*int play;
     while (true){
         printf("Do you want to play this gobang game? 1 for yes, 2 for no. \n");
         scanf("%d", &play);
@@ -90,8 +159,40 @@ int main(void){
         }
     }
 
-    printf("That's it.\n");
-    return 0;
+    printf("That's it.\n");*/
+    disable_A9_interrupts(); // disable interrupts in the A9 processor
+    set_A9_IRQ_stack(); // initialize the stack pointer for IRQ mode
+    config_GIC(); // configure the general interrupt controller
+    config_KEYs(); // configure KEYs to generate interrupts
+    config_PS2(); // configure keyboard to generate interrupts
+    enable_A9_interrupts(); // enable interrupts in the A9 processor
+
+    volatile int *pixel_ctrl_ptr = (int *)0xFF203020;
+    // declare other variables(not shown)
+    // initialize location and direction of rectangles(not shown)
+
+    /* set front pixel buffer to start of FPGA On-chip memory */
+    *(pixel_ctrl_ptr + 1) = 0xC8000000; // first store the address in the
+    // back buffer
+    /* now, swap the front/back buffers, to set the front buffer location */
+    wait_for_vsync();
+    /* initialize a pointer to the pixel buffer, used by drawing functions */
+    pixel_buffer_start = *pixel_ctrl_ptr;
+    clear_screen(); // pixel_buffer_start points to the pixel buffer
+    /* set back pixel buffer to start of SDRAM memory */
+    *(pixel_ctrl_ptr + 1) = 0xC0000000;
+    pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
+
+    clear_screen();
+
+    while(1){
+        // Erase whole thing from the screen
+        clear_screen();
+        draw_layout();
+
+        wait_for_vsync();
+        pixel_buffer_start = *(pixel_ctrl_ptr + 1);
+    }
 }
 
 void play_game(){
@@ -313,3 +414,118 @@ void swap(int* num1, int* num2){
     *num1 = *num2;
     *num2 = temp;
 }
+
+/* setup the KEY interrupts in the FPGA */
+void config_KEYs(){
+    volatile int * KEY_ptr = (int *) 0xFF200050; // KEY base address
+    *(KEY_ptr + 2) = 0xF; // enable interrupts for all four KEYs
+}
+
+/* setup the keyboard interrupts in the FPGA */
+void config_PS2 (void){
+    volatile int * PS2_ptr = (int *) 0xFF200100; // PS2 base address
+	*(PS2_ptr + 1) = 0x00000001; // set the last bit to 1 to enable interrupts
+}
+
+/*
+* Turn off interrupts in the ARM processor
+*/
+void disable_A9_interrupts(void){
+    int status = 0b11010011;
+    asm("msr cpsr, %[ps]" : : [ps]"r"(status));
+}
+
+/*
+* Initialize the banked stack pointer register for IRQ mode
+*/
+void set_A9_IRQ_stack(void){
+    int stack, mode;
+    stack = 0xFFFFFFFF - 7; // top of A9 onchip memory, aligned to 8 bytes
+    /* change processor to IRQ mode with interrupts disabled */
+    mode = 0b11010010;
+    asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
+    /* set banked stack pointer */
+    asm("mov sp, %[ps]" : : [ps] "r" (stack));
+    /* go back to SVC mode before executing subroutine return! */
+    mode = 0b11010011;
+    asm("msr cpsr, %[ps]" : : [ps] "r" (mode));
+}
+
+/*
+* Turn on interrupts in the ARM processor
+*/
+void enable_A9_interrupts(void){
+    int status = 0b01010011;
+    asm("msr cpsr, %[ps]" : : [ps]"r"(status));
+}
+
+
+/*
+* Configure the Generic Interrupt Controller (GIC)
+*/
+void config_GIC(void){
+    config_interrupt (73, 1); // configure the FPGA KEYs interrupt (73)
+    config_interrupt (79, 1); // configure the FPGA PS2 port interrupt (79)
+    // Set Interrupt Priority Mask Register (ICCPMR). Enable all priorities
+    *((int *) 0xFFFEC104) = 0xFFFF;
+    // Set the enable in the CPU Interface Control Register (ICCICR)
+    *((int *) 0xFFFEC100) = 1;
+    // Set the enable in the Distributor Control Register (ICDDCR)
+    *((int *) 0xFFFED000) = 1;
+}
+
+// Configure interupt based on interupt id
+void config_interrupt (int N, int CPU_target){
+    int reg_offset, index, value, address;
+    /* Configure the Interrupt Set-Enable Registers (ICDISERn).
+     * reg_offset = (integer_div(N / 32) * 4; value = 1 << (N mod 32) */
+    reg_offset = (N >> 3) & 0xFFFFFFFC;
+    index = N & 0x1F;
+    value = 0x1 << index;
+    address = 0xFFFED100 + reg_offset;
+    /* Using the address and value, set the appropriate bit */
+    *(int *)address |= value;
+    /* Configure the Interrupt Processor Targets Register (ICDIPTRn)
+     * reg_offset = integer_div(N / 4) * 4; index = N mod 4 */
+    reg_offset = (N & 0xFFFFFFFC);
+    index = N & 0x3;
+    address = 0xFFFED800 + reg_offset + index;
+    /* Using the address and value, write to (only) the appropriate byte */
+    *(char *)address = (char) CPU_target;
+}
+
+// Handler when there is input from the keyboard
+void keyboard_ISR(){
+    volatile int *PS2_ptr = (int *) 0xFF200100; // Points to PS2 Base
+    int PS2_data, RVALID;
+    PS2_data = *(PS2_ptr);	// read the Data register in the PS/2 port
+	RVALID = (PS2_data & 0x8000);	// extract the RVALID field, the 15 bit - read data valid
+
+    // Clear interrupt
+    int keyboard_status;
+	keyboard_status = *(PS2_ptr + 1 ); 
+	*(PS2_ptr+1) = keyboard_status; 
+}
+
+// Handler when a push button is clicked
+void pushbutton_ISR(void){
+    volatile int *key_ptr = (int *) 0xFF200050; // Points to KEY_base
+
+    // Clear interrupt
+    int press;
+    press = *(key_ptr + 3);
+    *(key_ptr + 3) = press;
+
+    if (press & 0x1){
+        if(draw == true)
+            draw = false;
+        else
+            draw = true;
+    }
+
+    return;
+
+}
+
+
+
