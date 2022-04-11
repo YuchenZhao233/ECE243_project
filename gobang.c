@@ -56,6 +56,9 @@ volatile int chess_board[ROW][COL];  // 0 for empty, 1 for blue piece, 2 for whi
 volatile int x_position;
 volatile int y_position;
 bool draw = false;
+unsigned char byte1 = 0;
+unsigned char byte2 = 0;
+unsigned char byte3 = 0;
 
 // Interupt set up
 void set_A9_IRQ_stack (void);
@@ -505,6 +508,24 @@ void keyboard_ISR(){
     int keyboard_status;
 	keyboard_status = *(PS2_ptr + 1 ); 
 	*(PS2_ptr+1) = keyboard_status; 
+
+    if (RVALID != 0){
+        byte1 = byte2;
+        byte2 = byte3;
+        byte3 = (PS2_data & 0xFF);  // the 31 to 16 bits stored information from the key board
+
+        if (byte3 == 0x5A && byte2 == 0xF0){ //enter is pressed
+            printf("Game start\n");
+        }
+
+        if (byte3 == 0x1C && byte2 == 0xF0)
+            printf("A is pressed\n");
+
+        
+		
+    }
+
+    return;
 }
 
 // Handler when a push button is clicked
