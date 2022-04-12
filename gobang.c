@@ -27,8 +27,8 @@
 #define TRUE 1
 
 // Define board size
-#define ROW 10
-#define COL 10
+#define ROW 15
+#define COL 15
 
 // Define eight directional macros
 #define UP  20
@@ -52,7 +52,7 @@
 
 // Global Variable
 volatile int pixel_buffer_start; 
-volatile int chess_board[ROW][COL];  // 0 for empty, 1 for blue piece, 2 for white piece
+volatile int chess_board[ROW][COL];  // 0 for empty, 1 for black piece, 2 for white piece
 volatile int x_position;
 volatile int y_position;
 bool draw = false;
@@ -514,12 +514,30 @@ void keyboard_ISR(){
         byte2 = byte3;
         byte3 = (PS2_data & 0xFF);  // the 31 to 16 bits stored information from the key board
 
-        if (byte3 == 0x5A && byte2 == 0xF0){ //enter is pressed
+        if (byte3 == 0x5A && byte2 == 0xF0 && byte1 == 0x5A){ //enter is pressed
             printf("Game start\n");
         }
 
-        if (byte3 == 0x1C && byte2 == 0xF0)
-            printf("A is pressed\n");
+        if (byte3 == 0x1C && byte2 == 0xF0 && byte1 == 0x1C){ // A, move left
+            printf("Left\n");
+        }
+
+        if (byte3 == 0x23 && byte2 == 0xF0 && byte1 == 0x23){ // D, move right
+            printf("Right\n");
+        }
+
+        if (byte3 == 0x1D && byte2 == 0xF0 && byte1 == 0x1D){ // W, move up
+            printf("Up\n");
+        }
+
+        if (byte3 == 0x1B && byte2 == 0xF0 && byte1 == 0x1B){ // S, move down
+            printf("Down\n");
+        }
+
+        if (byte3 == 0x29 && byte2 == 0xF0 && byte1 == 0x29){ // Space, play the chess
+            printf("Play\n");
+        }
+
 
         
 		
