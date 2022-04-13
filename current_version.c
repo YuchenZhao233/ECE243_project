@@ -128,15 +128,69 @@ void plot_whole_board()
 	place_go(1, 9, 1);
 	place_go(3, 4, 1);
 	place_go(3, 5, 1);
-	plot_go(58, 54, 0);
-	plot_go(58, 68, 1);
 	place_go(1, 1, 2);
+	place_go(2, 1, 2);
+	place_go(3, 1, 2);
 	place_go(1, 2, 3);
 	
 	draw_player_info();
 	plot_board_coordinates();
 }
 
+//plot initial board with animation
+void plot_initial_animation(){
+	int y, x;
+	//plot the background
+	for (x = 0; x < 320; x++)
+        for (y = 0; y < 240; y++)
+            plot_pixel (x, y, 0xED8E);
+	
+	//draw horizontal lines
+	
+	int i = 18;
+	while(i < 216){
+		draw_line(22, i, 302, i, 0);
+		i = i + 14;
+	}
+	
+	//draw vertical lines
+	i = 14;
+	while(i < 300){
+		draw_line(8 + i, 18, 8+i, 213, 0);
+		i = i + 14;
+	}
+}
+
+//plot the initial stones to show "GOMOKU" on the board
+void plot_initial_stones(){
+	for(int i = 1; i < 6; ++i){
+		place_go(-1, i, 0);
+		place_go(4, i, 1);
+		place_go(7, i, 1);
+		place_go(9, i, 0);
+		place_go(11, i, 0);
+		place_go(13, i, 0);
+		place_go(15, i, 1);
+		place_go(19, i, 1);
+		place_go(4, 6 + i, 0);
+		place_go(9, 6+i, 1);
+		place_go(13, 6+i, 1);
+	}
+	place_go(1, 3, 0);
+	for(int i = 0; i < 3; ++i){
+		place_go(i, 1, 0);
+		place_go(i, 5, 0);
+		place_go(2, 3+i, 0);
+		place_go(10+i, 1, 0);
+		place_go(5+i, 9-i, 0);
+		place_go(5+i, 9+i, 0);
+		place_go(4+i, 1, 1);
+		place_go(4+i, 5, 1);
+		place_go(16+i, 1, 1);
+		place_go(16+i, 5, 1);
+		place_go(10+i, 11, 1);
+	}
+}
 
 // Plot x, y coordinates (1-15) of the board
 void plot_board_coordinates(){
