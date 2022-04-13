@@ -137,7 +137,6 @@ void plot_whole_board()
 	plot_board_coordinates();
 }
 
-//plot initial board with animation
 void plot_initial_animation(){
 	int y, x;
 	//plot the background
@@ -148,7 +147,7 @@ void plot_initial_animation(){
 	//draw horizontal lines
 	
 	int i = 18;
-	while(i < 216){
+	while(i < 188){
 		draw_line(22, i, 302, i, 0);
 		i = i + 14;
 	}
@@ -156,12 +155,11 @@ void plot_initial_animation(){
 	//draw vertical lines
 	i = 14;
 	while(i < 300){
-		draw_line(8 + i, 18, 8+i, 213, 0);
+		draw_line(8 + i, 18, 8+i, 185, 0);
 		i = i + 14;
 	}
 }
 
-//plot the initial stones to show "GOMOKU" on the board
 void plot_initial_stones(){
 	for(int i = 1; i < 6; ++i){
 		place_go(-1, i, 0);
@@ -190,6 +188,51 @@ void plot_initial_stones(){
 		place_go(16+i, 5, 1);
 		place_go(10+i, 11, 1);
 	}
+}
+
+// draw creators' names and start message
+void draw_creator_info(){
+	draw_text(28, 50, 'C');
+	draw_text(29, 50, 'r');
+	draw_text(30, 50, 'e');
+	draw_text(31, 50, 'a');
+	draw_text(32, 50, 't');
+	draw_text(33, 50, 'e');
+	draw_text(34, 50, 'd');
+	draw_text(36, 50, 'b');
+	draw_text(37, 50, 'y');
+	draw_text(39, 50, 'M');
+	draw_text(40, 50, 'a');
+	draw_text(41, 50, 'r');
+	draw_text(42, 50, 'k');
+	draw_text(44, 50, 'a');
+	draw_text(45, 50, 'n');
+	draw_text(46, 50, 'd');
+	draw_text(48, 50, 'R');
+	draw_text(49, 50, 'i');
+	draw_text(50, 50, 'c');
+	draw_text(51, 50, 'h');
+	draw_text(52, 50, 'a');
+	draw_text(53, 50, 'r');
+	draw_text(54, 50, 'd');
+	
+	draw_text(31, 53, 'p');
+	draw_text(32, 53, 'r');
+	draw_text(33, 53, 'e');
+	draw_text(34, 53, 's');
+	draw_text(35, 53, 's');
+	draw_text(37, 53, 'E');
+	draw_text(38, 53, 'n');
+	draw_text(39, 53, 't');
+	draw_text(40, 53, 'e');
+	draw_text(41, 53, 'r');
+	draw_text(43, 53, 't');
+	draw_text(44, 53, 'o');
+	draw_text(46, 53, 's');
+	draw_text(47, 53, 't');
+	draw_text(48, 53, 'a');
+	draw_text(49, 53, 'r');
+	draw_text(50, 53, 't');
 }
 
 // Plot x, y coordinates (1-15) of the board
@@ -718,6 +761,7 @@ void draw_current_status(int i){
 	}
 }
 
+//Clear current game status
 void clear_status(){
 	clear_text(67, 80, 36);
 }
