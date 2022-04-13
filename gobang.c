@@ -47,8 +47,20 @@
 #define ERROR 6
 #define VALID 7
 
+#define BLACK_WON 1
+#define WHITE_WON 2
+#define TIE 3
+#define CONTINUE 4
+#define INVALID 5
+#define START 8
+
 #define PLAYER1 1
 #define PLAYER2 2
+
+#define BLACK_STONE 0
+#define WHITE_STONE 1
+#define BLACK_HIGHLIGHT_STONE 2
+#define WHITE_HIGHLIGHT_STONE 3
 
 // Global Variable
 volatile int pixel_buffer_start; 
@@ -56,7 +68,6 @@ volatile int character_buffer_start;
 volatile int chess_board[ROW][COL];  // 0 for empty, 1 for black piece, 2 for white piece
 volatile int x_position = 0;
 volatile int y_position = 0;
-bool draw = false;
 unsigned char byte1 = 0;
 unsigned char byte2 = 0;
 unsigned char byte3 = 0;
@@ -84,7 +95,8 @@ void plot_board_coordinates();
 void plot_go(int x, int y, int color);
 void place_go(int x_coord, int y_coord, int color);
 void draw_player_info();
-
+void plot_initial_animation();
+void plot_initial_stones();
 void plot_pixel(int, int, short int);
 void draw_line(int , int , int , int , short int);
 void clear_screen();
@@ -109,6 +121,14 @@ const unsigned short BLACK_GO[169]={
 //Pixel array of white chess
 const unsigned short WHITE_GO[169]={
 	0xeeef, 0xf710, 0xeeef, 0xd60e, 0xce13, 0xce57, 0xce79, 0xce57, 0xce13, 0xd60e, 0xeeef, 0xf710, 0xeeef, 0xf710, 0xeeae, 0xc5f1, 0xe73c, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xe73c, 0xc5f1, 0xeeae, 0xf710, 0xeeef, 0xc5f1, 0xf7bf, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xf7bf, 0xc5f1, 0xeeef, 0xce0e, 0xe73c, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xe73c, 0xce0e, 0xce34, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xce34, 0xce78, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xce78, 0xd699, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xd699, 0xce78, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xce78, 0xce34, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xce34, 0xce0f, 0xef5d, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xef5d, 0xce0f, 0xeece, 0xc5f2, 0xffdf, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffdf, 0xc5f2, 0xeece, 0xf710, 0xe6ae, 0xc5f2, 0xef5e, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xef5e, 0xc5f2, 0xe6ae, 0xf710, 0xeeef, 0xf710, 0xeece, 0xce0f, 0xce35, 0xe6fa, 0xdefa, 0xe6fa, 0xce35, 0xce0f, 0xeece, 0xf710, 0xeeef
+};
+
+const unsigned short BLACK_HIGHLIGHT_GO[196] = {
+	0xe570, 0xe5ad, 0xddc7, 0xde04, 0xf726, 0xffa8, 0xef48, 0xef48, 0xffca, 0xe6c8, 0xe689, 0xd5a8, 0xd54a, 0xfe30, 0xe5af, 0xe5ac, 0xf6ac, 0xff0b, 0xbd44, 0x5240, 0x3980, 0x3160, 0x5240, 0xace4, 0xf72d, 0xf6ad, 0xe5ec, 0xd52a, 0xe60c, 0xe62c, 0xe64c, 0x6240, 0x1000, 0x1000, 0x0800, 0x0800, 0x1020, 0x1040, 0x49e0, 0xe68d, 0xf6ae, 0xddcb, 0xd608, 0xeeac, 0x62a0, 0x1840, 0x1000, 0x0802, 0x0806, 0x0004, 0x0001, 0x0800, 0x0820, 0x41c0, 0xff0f, 0xe62b, 0xf78b, 0xad46, 0x0820, 0x0800, 0x0800, 0x0002, 0x0003, 0x0023, 0x0001, 0x1082, 0x1880, 0x0820, 0xa4c6, 0xf70d, 0xe74a, 0x4220, 0x1080, 0x0820, 0x0000, 0x18e6, 0x0002, 0x0002, 0x0043, 0x0000, 0x0000, 0x18a0, 0x41c0, 0xffae, 0xe76d, 0x2980, 0x0020, 0x10a0, 0x0000, 0x0001, 0x0021, 0x0042, 0x0002, 0x0042, 0x0860, 0x0820, 0x2920, 0xe6eb, 0xdf0b, 0x2980, 0x0840, 0x0000, 0x0041, 0x0001, 0x0020, 0x0020, 0x0001, 0x0000, 0x0000, 0x1040, 0x2920, 0xef0c, 0xefab, 0x3a00, 0x10a0, 0x0000, 0x0020, 0x0000, 0x0020, 0x0040, 0x0000, 0x0000, 0x0820, 0x0800, 0x3980, 0xf74e, 0xe709, 0x9cc3, 0x1060, 0x0820, 0x0000, 0x0860, 0x0000, 0x0000, 0x0000, 0x0000, 0x0800, 0x1000, 0xaca6, 0xf6ec, 0xe68b, 0xe6ad, 0x3980, 0x0800, 0x1060, 0x0000, 0x0802, 0x0802, 0x0801, 0x1020, 0x0800, 0x3940, 0xeeac, 0xe64a, 0xd5cb, 0xee8e, 0xeeae, 0x4180, 0x1020, 0x0800, 0x0800, 0x0800, 0x0800, 0x1860, 0x3100, 0xe66b, 0xfeed, 0xe62a, 0xddcd, 0xddab, 0xee8d, 0xeeed, 0xa4a4, 0x4a20, 0x20c0, 0x2100, 0x39a0, 0x8c24, 0xf6ee, 0xf6cd, 0xddca, 0xcd08, 0xedef, 0xddac, 0xddc9, 0xe689, 0xef2a, 0xffee, 0xdeeb, 0xf76d, 0xff8e, 0xef2d, 0xd609, 0xddea, 0xdd8a, 0xf62d
+};
+
+const unsigned short WHITE_HIGHLIGHT_GO[196] = {
+	0xed90, 0xe58d, 0xe5c9, 0xe647, 0xeee5, 0xf766, 0xf787, 0xf789, 0xf74a, 0xe6ca, 0xde29, 0xddc9, 0xe5ab, 0xedcc, 0xe58d, 0xe5cd, 0xee6c, 0xff0d, 0xffae, 0xffef, 0xfff1, 0xfff2, 0xfff2, 0xff91, 0xf6ee, 0xe64c, 0xe5eb, 0xe5ab, 0xdde9, 0xee6c, 0xff31, 0xffb6, 0xfff9, 0xfffc, 0xfffd, 0xfffd, 0xfffc, 0xfff9, 0xffd4, 0xff2f, 0xee4c, 0xddca, 0xde88, 0xf72d, 0xffd5, 0xfffa, 0xffde, 0xffbf, 0xffbf, 0xffbf, 0xffdf, 0xfffd, 0xfff8, 0xffd3, 0xf70d, 0xe649, 0xe709, 0xffaf, 0xfff7, 0xfffb, 0xfffe, 0xffff, 0xffff, 0xffff, 0xffdf, 0xffff, 0xfffb, 0xfff6, 0xff8e, 0xeee9, 0xef8b, 0xfff1, 0xfff8, 0xfffd, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xfffd, 0xfff8, 0xfff0, 0xf76a, 0xf7ed, 0xfff2, 0xfffb, 0xffff, 0xf7df, 0xf7ff, 0xf7ff, 0xf7ff, 0xf7ff, 0xffff, 0xfffe, 0xfff9, 0xfff2, 0xffad, 0xefcd, 0xfff3, 0xfffb, 0xffff, 0xffff, 0xffff, 0xf7ff, 0xf7fe, 0xf7ff, 0xf7ff, 0xfffe, 0xfffa, 0xfff3, 0xffae, 0xef6c, 0xfff2, 0xfff9, 0xfffc, 0xffde, 0xffff, 0xffff, 0xf7ff, 0xffff, 0xffff, 0xfffe, 0xfffa, 0xfff2, 0xf74c, 0xe6eb, 0xffb1, 0xfff7, 0xfffb, 0xfffd, 0xffff, 0xffff, 0xffdf, 0xffdf, 0xffde, 0xfffc, 0xfff8, 0xff91, 0xeecb, 0xde4b, 0xf710, 0xffd5, 0xfff9, 0xfffd, 0xffdf, 0xffdf, 0xffdf, 0xffdf, 0xfffc, 0xfff8, 0xffd4, 0xf6ef, 0xe62b, 0xddec, 0xe66e, 0xff31, 0xffd5, 0xfff9, 0xfffc, 0xffdf, 0xffde, 0xfffc, 0xfff9, 0xfff4, 0xff30, 0xe64d, 0xddcb, 0xe5af, 0xe5ed, 0xee8b, 0xff4d, 0xffd0, 0xfff3, 0xfff6, 0xfff6, 0xfff4, 0xffd2, 0xf72e, 0xe66b, 0xe5eb, 0xe5cc, 0xe5b0, 0xddad, 0xde08, 0xe6a7, 0xf749, 0xff8c, 0xffb0, 0xffb0, 0xf76e, 0xef0c, 0xde69, 0xde09, 0xddcb, 0xe5cd
 };
 
 
@@ -151,17 +171,6 @@ void __attribute__ ((interrupt)) __cs3_isr_fiq (void){
     while(1);
 }
 
-void draw_layout(){
-    if (draw == true){
-        int x = 0;
-        int y = 0;
-        for (x = 0; x < RESOLUTION_X; x++) {
-            for (y = 0; y < RESOLUTION_Y; y++) {
-                plot_pixel(x, y, ORANGE);
-            }
-        }
-    }
-}
 
 
 
@@ -431,6 +440,61 @@ void plot_whole_board()
 	
 	// draw_player_info();
 	plot_board_coordinates();
+}
+
+//plot initial board with animation
+void plot_initial_animation(){
+	int y, x;
+	//plot the background
+	for (x = 0; x < 320; x++)
+        for (y = 0; y < 240; y++)
+            plot_pixel (x, y, 0xED8E);
+	
+	//draw horizontal lines
+	
+	int i = 18;
+	while(i < 216){
+		draw_line(22, i, 302, i, 0);
+		i = i + 14;
+	}
+	
+	//draw vertical lines
+	i = 14;
+	while(i < 300){
+		draw_line(8 + i, 18, 8+i, 213, 0);
+		i = i + 14;
+	}
+}
+
+//plot the initial stones to show "GOMOKU" on the board
+void plot_initial_stones(){
+	for(int i = 1; i < 6; ++i){
+		place_go(-1, i, 0);
+		place_go(4, i, 1);
+		place_go(7, i, 1);
+		place_go(9, i, 0);
+		place_go(11, i, 0);
+		place_go(13, i, 0);
+		place_go(15, i, 1);
+		place_go(19, i, 1);
+		place_go(4, 6 + i, 0);
+		place_go(9, 6+i, 1);
+		place_go(13, 6+i, 1);
+	}
+	place_go(1, 3, 0);
+	for(int i = 0; i < 3; ++i){
+		place_go(i, 1, 0);
+		place_go(i, 5, 0);
+		place_go(2, 3+i, 0);
+		place_go(10+i, 1, 0);
+		place_go(5+i, 9-i, 0);
+		place_go(5+i, 9+i, 0);
+		place_go(4+i, 1, 1);
+		place_go(4+i, 5, 1);
+		place_go(16+i, 1, 1);
+		place_go(16+i, 5, 1);
+		place_go(10+i, 11, 1);
+	}
 }
 
 void draw_chess_on_board(){
@@ -810,17 +874,31 @@ void plot_board_coordinates(){
 // plot a stone at a given position with given color
 void plot_go(int x, int y, int color){
 	int i, j;
-	if(color == 0){
+	if(color == BLACK_STONE){
 		for(i = 0; i < 13; ++i){
 			for(j = 0; j < 13; ++j){
 				plot_pixel(x + i, y + j, BLACK_GO[i*13+j]);
 			}
 		}
 	}
-	if(color == 1){
+	if(color == WHITE_STONE){
 		for(i = 0; i < 13; ++i){
 			for(j = 0; j < 13; ++j){
 				plot_pixel(x + i, y + j, WHITE_GO[i*13+j]);
+			}
+		}
+	}
+	if(color == BLACK_HIGHLIGHT_STONE){
+		for(i = 0; i < 14; ++i){
+			for(j = 0; j < 14; ++j){
+				plot_pixel(x + i, y + j, BLACK_HIGHLIGHT_GO[i*14+j]);
+			}
+		}
+	}
+	if(color == WHITE_HIGHLIGHT_STONE){
+		for(i = 0; i < 14; ++i){
+			for(j = 0; j < 14; ++j){
+				plot_pixel(x + i, y + j, WHITE_HIGHLIGHT_GO[i*14+j]);
 			}
 		}
 	}
@@ -831,9 +909,7 @@ void place_go(int x_coord, int y_coord, int color){
 	plot_go(44 + (x_coord - 1) * 14, 12 + (y_coord - 1) * 14, color);
 }
 
-// Draw all player info on the board
 void draw_player_info(){
-	
 	//draw player 1
 	draw_text(67, 10, 'P');
 	draw_text(68, 10, 'l');
@@ -881,6 +957,102 @@ void draw_player_info(){
 	draw_text(78, 23, 's');
 	
 	//draw status
+	draw_text(67, 33, 'S');
+	draw_text(68, 33, 't');
+	draw_text(69, 33, 'a');
+	draw_text(70, 33, 't');
+	draw_text(71, 33, 'u');
+	draw_text(72, 33, 's');
+	draw_text(73, 33, ':');
+	clear_status();
+	draw_current_status(TIE);
+}
+
+// Draw current game status on the board
+void draw_current_status(int i){
+	if(i == START){
+		draw_text(67, 36, 'G');
+		draw_text(68, 36, 'a');
+	  	draw_text(69, 36, 'm');
+	  	draw_text(70, 36, 'e');
+	 	draw_text(72, 36, 'S');
+	 	draw_text(73, 36, 't');
+	  	draw_text(74, 36, 'a');
+		draw_text(75, 36, 'r');
+		draw_text(76, 36, 't');
+		draw_text(77, 36, '!');
+	}
+	if(i == CONTINUE){
+		draw_text(67, 36, 'C');
+		draw_text(68, 36, 'o');
+	  	draw_text(69, 36, 'n');
+	  	draw_text(70, 36, 't');
+	 	draw_text(72, 36, 'i');
+	 	draw_text(73, 36, 'n');
+	  	draw_text(74, 36, 'u');
+		draw_text(75, 36, 'e');
+	}
+	if(i == BLACK_WON){
+		draw_text(67, 36, 'P');
+		draw_text(68, 36, 'l');
+		draw_text(69, 36, 'a');
+		draw_text(70, 36, 'y');
+		draw_text(71, 36, 'e');
+		draw_text(72, 36, 'r');
+		draw_text(74, 36, '1');
+		draw_text(76, 36, 'w');
+		draw_text(77, 36, 'o');
+		draw_text(78, 36, 'n');
+		draw_text(79, 36, '!');
+	}
+	if(i == WHITE_WON){
+		draw_text(67, 36, 'P');
+		draw_text(68, 36, 'l');
+		draw_text(69, 36, 'a');
+		draw_text(70, 36, 'y');
+		draw_text(71, 36, 'e');
+		draw_text(72, 36, 'r');
+		draw_text(74, 36, '2');
+		draw_text(76, 36, 'w');
+		draw_text(77, 36, 'o');
+		draw_text(78, 36, 'n');
+		draw_text(79, 36, '!');
+	}
+	if(i == TIE){
+		draw_text(67, 36, 'T');
+		draw_text(68, 36, 'i');
+		draw_text(69, 36, 'e');
+		draw_text(71, 36, '!');
+	}
+	if(i == INVALID){
+		draw_text(67, 36, 'I');
+		draw_text(68, 36, 'n');
+		draw_text(69, 36, 'v');
+		draw_text(70, 36, 'a');
+		draw_text(71, 36, 'l');
+		draw_text(72, 36, 'i');
+		draw_text(73, 36, 'd');
+		draw_text(75, 36, 'm');
+		draw_text(76, 36, 'o');
+		draw_text(77, 36, 'v');
+		draw_text(78, 36, 'e');
+	}
+}
+
+void clear_status(){
+	clear_text(67, 80, 36);
+}
+
+//  clean a string at a given x, y coordinate (80 * 60)
+void clear_text(int x1, int x2, int y){
+	for(int i = x1; i <= x2; ++i){
+		clear_one_char(i, y);
+	}
+}
+
+// clean one character at a given x, y coordinate (80 * 60)
+void clear_one_char(int x, int y){
+	*(char *)(character_buffer_start + (y << 7) + x) = 0;
 }
 
 void plot_pixel(int x, int y, short int line_color)
@@ -1103,13 +1275,6 @@ void pushbutton_ISR(void){
     int press;
     press = *(key_ptr + 3);
     *(key_ptr + 3) = press;
-
-    if (press & 0x1){
-        if(draw == true)
-            draw = false;
-        else
-            draw = true;
-    }
 
     return;
 
