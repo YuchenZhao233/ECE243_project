@@ -55,6 +55,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 	
+volatile int game_status; //should be between 10 - 14 and 28
+volatile int move_status; //should be between 0 - 9	
 volatile int pixel_buffer_start;
 volatile int character_buffer_start; // global variable
 
