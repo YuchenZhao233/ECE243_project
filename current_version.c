@@ -33,9 +33,6 @@
 #define RESOLUTION_Y 240
 
 /* Constants for animation */
-#define BOX_LEN 2
-#define NUM_BOXES 8
-
 #define BLACK_STONE_ 0
 #define WHITE_STONE_ 1
 #define BLACK_HIGHLIGHT_STONE_ 2
@@ -52,7 +49,7 @@
 #define INVALID 12
 #define BLACK_WON 13
 #define WHITE_WON 14
-#define START 15
+#define START 28
 
 #include <stdlib.h>
 #include <stdio.h>
