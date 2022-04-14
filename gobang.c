@@ -110,6 +110,11 @@ void swap(int*, int*);
 void wait_for_vsync();
 void draw_postion();
 void draw_highlight();
+void clear_text(int x1, int x2, int y);
+void clear_status();
+void draw_current_status(int i);
+void draw_creator_info();
+void clear_one_char(int x, int y);
 
 // Game logic functions
 int check_move_legality(int x, int y);
@@ -407,20 +412,24 @@ void draw_postion(){
 void plot_whole_board()
 {
     int y, x;
+	int i = 18;
 	//plot the white background
 	
-	for (x = 0; x < 320; x++)
-        for (y = 0; y < 240; y++)
+	for (x = 0; x < 320; x++){
+        for (y = 0; y < 240; y++){
             plot_pixel (x, y, 0);
+		}
+	}
 			
 	
 	//plot the board
-    for (x = 30; x < 260; x++)
-        for (y = 1; y < 227; y++)
+    for (x = 30; x < 260; x++){
+        for (y = 1; y < 227; y++){
             plot_pixel (x, y, 0xED8E);
+		}
+	}
 	
 	//draw horizontal lines
-	int i = 18;
 	while(i < 216){
 		draw_line(50, i, 246, i, 0);
 		i = i + 14;
@@ -449,15 +458,15 @@ void plot_initial_animation(){
 		//draw horizontal lines
 		
 		int i = 18;
-		while(i < 216){
+		while(i < 188){
 			draw_line(22, i, 302, i, 0);
 			i = i + 14;
 		}
-		
+	
 		//draw vertical lines
 		i = 14;
 		while(i < 300){
-			draw_line(8 + i, 18, 8+i, 213, 0);
+			draw_line(8 + i, 18, 8+i, 185, 0);
 			i = i + 14;
 		}
 		draw_creator_info();
@@ -1089,10 +1098,10 @@ void draw_current_status(int i){
 		draw_text(68, 36, 'o');
 	  	draw_text(69, 36, 'n');
 	  	draw_text(70, 36, 't');
-	 	draw_text(72, 36, 'i');
-	 	draw_text(73, 36, 'n');
-	  	draw_text(74, 36, 'u');
-		draw_text(75, 36, 'e');
+	 	draw_text(71, 36, 'i');
+	 	draw_text(72, 36, 'n');
+	  	draw_text(73, 36, 'u');
+		draw_text(74, 36, 'e');
 	}
 	if(i == BLACK_WON){
 		draw_text(67, 36, 'P');
