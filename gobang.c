@@ -96,6 +96,9 @@ void draw_board();
 void draw_chess();
 void draw_chess_on_board();
 void draw_text(int x, int y, char c);
+void clear_text(int x1, int x2, int y);
+void clear_one_char(int x, int y);
+void clear_status();
 void plot_whole_board();
 void plot_board_coordinates();
 void plot_go(int x, int y, int color);
@@ -103,6 +106,8 @@ void place_go(int x_coord, int y_coord, int color);
 void draw_player_info();
 void plot_initial_animation();
 void plot_initial_stones();
+void draw_creator_info();
+void draw_current_status(int i);
 void plot_pixel(int, int, short int);
 void draw_line(int , int , int , int , short int);
 void clear_screen();
@@ -1331,7 +1336,7 @@ void keyboard_ISR(){
         }
 
         if (byte3 == 0x1C && byte2 == 0xF0 && byte1 == 0x1C){ // A, move left
-			if (status != BLACK_WON && status != WHITE_WON){
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
 				if (y_position != 0)
 					y_position--;
 			}
@@ -1339,28 +1344,57 @@ void keyboard_ISR(){
         }
 
         if (byte3 == 0x23 && byte2 == 0xF0 && byte1 == 0x23){ // D, move right
-			if (status != BLACK_WON && status != WHITE_WON){
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
 				if (y_position != ROW - 1)
 					y_position++;
 			}
         }
 
         if (byte3 == 0x1D && byte2 == 0xF0 && byte1 == 0x1D){ // W, move up
-			if (status != BLACK_WON && status != WHITE_WON){
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
 				if (x_position != 0)
 					x_position--;
 			}
         }
 
         if (byte3 == 0x1B && byte2 == 0xF0 && byte1 == 0x1B){ // S, move down
-			if (status != BLACK_WON && status != WHITE_WON){
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
+				if (x_position != COL - 1)
+					x_position++;
+			}
+        }
+
+		if (byte3 == 0x3B && byte2 == 0xF0 && byte1 == 0x3B){ // J, move left
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
+				if (y_position != 0)
+					y_position--;
+			}
+
+        }
+
+        if (byte3 == 0x4B && byte2 == 0xF0 && byte1 == 0x4B){ // L, move right
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
+				if (y_position != ROW - 1)
+					y_position++;
+			}
+        }
+
+        if (byte3 == 0x43 && byte2 == 0xF0 && byte1 == 0x43){ // I, move up
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
+				if (x_position != 0)
+					x_position--;
+			}
+        }
+
+        if (byte3 == 0x42 && byte2 == 0xF0 && byte1 == 0x42){ // K, move down
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
 				if (x_position != COL - 1)
 					x_position++;
 			}
         }
 
         if (byte3 == 0x29 && byte2 == 0xF0 && byte1 == 0x29){ // Space, play the chess
-			if (status != BLACK_WON && status != WHITE_WON){
+			if (status != BLACK_WON && status != WHITE_WON && status != TIE){
 				status = check_move_legality(x_position, y_position);
 				if (status == VALID){
 					chess_board[x_position][y_position] = turn;
